@@ -14,9 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Station AFRIQUIA — Facturation",
+  title: "Station BEN KHALED — Facturation",
   description:
-    "Application de facturation pour station service AFRIQUIA Al Baraka. Gérez vos factures rapidement et efficacement.",
+    "Application de facturation pour station service BEN KHALED . Gérez vos factures rapidement et efficacement.",
 };
 
 export default function RootLayout({

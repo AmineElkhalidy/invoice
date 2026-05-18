@@ -39,7 +39,7 @@ export function Invoice({
   const { t, locale } = useLocale();
 
   const totalHT = data.amount;
-  const tvaAmount = totalHT * 0.2;
+  const tvaAmount = totalHT * 0.1;
   const totalTTC = totalHT + tvaAmount;
   const fuelLabel = data.fuelType === "gasoil" ? t("gasoil") : t("unleaded");
 

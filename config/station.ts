@@ -1,5 +1,5 @@
 export const stationConfig = {
-  name: "Station AFRIQUIA - Al Baraka",
+  name: "Station BEN KHALED",
   address: "Route Nationale N1, Km 12, Berrechid, Maroc",
   ice: "002345678000045",
   rc: "12345",
