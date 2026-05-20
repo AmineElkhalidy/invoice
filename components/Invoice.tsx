@@ -3,6 +3,7 @@
 import { useLocale } from "@/components/LocaleProvider";
 import { stationConfig } from "@/config/station";
 import { Button } from "@/components/ui/button";
+import { useEffect } from "react";
 
 export interface InvoiceData {
   id: string;
@@ -44,6 +45,16 @@ export function Invoice({
   const tvaAmount = totalHT * 0.1;
   const totalTTC = totalHT + tvaAmount;
   const fuelLabel = data.fuelType === "gasoil" ? t("gasoil") : t("unleaded");
+
+  useEffect(() => {
+    const originalTitle = document.title;
+    // This sets the default filename when printing/saving to PDF
+    document.title = `${stationConfig.name} - ${data.customerName} - ${data.id}`;
+    
+    return () => {
+      document.title = originalTitle;
+    };
+  }, [data.customerName, data.id]);
 
   return (
     <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">

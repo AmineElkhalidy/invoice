@@ -121,9 +121,11 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+
   html {
     @apply font-sans;
   }
@@ -131,8 +133,9 @@
 
 /* ─── Print Styles ─── */
 @media print {
+
   /* Hide everything except the invoice */
-  body > * {
+  body>* {
     visibility: hidden;
   }
 
@@ -148,7 +151,7 @@
     width: 100%;
     max-width: 100%;
     margin: 0;
-    padding: 0;
+    padding: 10mm;
     background: white !important;
     color: #1e293b !important;
     border-radius: 0 !important;
@@ -160,14 +163,15 @@
     display: none !important;
   }
 
-  /* Page setup */
+  /* Page setup — margin: 0 removes browser header/footer (title, URL, date, page number) */
   @page {
     size: A4;
-    margin: 10mm;
+    margin: 0;
   }
 
   /* Ensure clean output */
-  html, body {
+  html,
+  body {
     background: white !important;
     margin: 0;
     padding: 0;
