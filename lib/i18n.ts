@@ -54,6 +54,19 @@ export const translations = {
     printInvoice: "Imprimer / Sauvegarder PDF",
     newInvoice: "Nouvelle facture",
     thankYou: "Merci pour votre confiance",
+
+    // Clients
+    manageClients: "Gérer les clients",
+    clientsTitle: "Clients",
+    addClient: "Ajouter un client",
+    updateClient: "Modifier le client",
+    cancel: "Annuler",
+    noClientsFound: "Aucun client trouvé. Ajoutez-en un ci-dessus.",
+    actions: "Actions",
+    edit: "Modifier",
+    delete: "Supprimer",
+    confirmDelete: "Êtes-vous sûr de vouloir supprimer ce client ?",
+    loadingClients: "Chargement des clients...",
   },
   ar: {
     // Auth
@@ -108,6 +121,19 @@ export const translations = {
     printInvoice: "طبع / حفظ PDF",
     newInvoice: "فاتورة جديدة",
     thankYou: "شكرا على الثيقة ديالكم",
+
+    // Clients
+    manageClients: "تسيير الكليان",
+    clientsTitle: "الكليان",
+    addClient: "زيد كليان",
+    updateClient: "بدل الكليان",
+    cancel: "إلغاء",
+    noClientsFound: "مكاين حتى كليان. زيد واحد الفوق.",
+    actions: "شنو دير",
+    edit: "بدل",
+    delete: "مسح",
+    confirmDelete: "واش متأكد بغيتي تمسح هاد الكليان؟",
+    loadingClients: "كنجيبو الكليان...",
   },
 } as const;
 

@@ -46,7 +46,7 @@ export function Header() {
             {t("dashboardTitle") || "Dashboard"}
           </Link>
           <Link href="/clients" className="text-xs font-semibold text-slate-300 hover:text-white px-2 py-1 rounded hover:bg-white/10 transition-all">
-            Clients
+            {t("clientsTitle")}
           </Link>
           <div className="w-px h-4 bg-white/20 mx-1"></div>
           <LanguageToggle />
