@@ -1,11 +1,11 @@
 export const stationConfig = {
-  name: "Station BEN KHALED",
-  address: "Route Nationale N1, Km 12, Berrechid, Maroc",
-  ice: "002345678000045",
-  rc: "12345",
-  identifiantFiscal: "45678901",
-  patente: "78901234",
-  phone: "+212 5 22 33 44 55",
+  name: "Station BENKHALED",
+  address: "DR OLD KHALED COMMUNE SIDI AISSA BEN SLIMANE PROVINCE ELKELAA DES SRAGHNA",
+  ice: "000826987000072",
+  rc: "5669",
+  identifiantFiscal: "53654806",
+  patente: "54287762",
+  phone: "+212 6 61 74 75 42",
 } as const;
 
 export type StationConfig = typeof stationConfig;

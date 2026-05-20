@@ -5,6 +5,7 @@ import { LanguageToggle } from "@/components/LanguageToggle";
 import { logout } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { stationConfig } from "@/config/station";
+import Link from "next/link";
 
 export function Header() {
   const { t } = useLocale();
@@ -41,6 +42,13 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-2">
+          <Link href="/dashboard" className="text-xs font-semibold text-slate-300 hover:text-white px-2 py-1 rounded hover:bg-white/10 transition-all">
+            {t("dashboardTitle") || "Dashboard"}
+          </Link>
+          <Link href="/clients" className="text-xs font-semibold text-slate-300 hover:text-white px-2 py-1 rounded hover:bg-white/10 transition-all">
+            Clients
+          </Link>
+          <div className="w-px h-4 bg-white/20 mx-1"></div>
           <LanguageToggle />
           <form action={logout}>
             <Button

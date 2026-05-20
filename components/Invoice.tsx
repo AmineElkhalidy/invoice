@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button";
 export interface InvoiceData {
   id: string;
   customerName: string;
-  amount: number;
+  clientIce: string;
+  unitPrice: number;
+  quantity: number;
   fuelType: "gasoil" | "unleaded";
   date: Date;
 }
@@ -38,7 +40,7 @@ export function Invoice({
 }) {
   const { t, locale } = useLocale();
 
-  const totalHT = data.amount;
+  const totalHT = data.unitPrice * data.quantity;
   const tvaAmount = totalHT * 0.1;
   const totalTTC = totalHT + tvaAmount;
   const fuelLabel = data.fuelType === "gasoil" ? t("gasoil") : t("unleaded");
@@ -159,6 +161,11 @@ export function Invoice({
             <p className="mt-1 text-base font-bold text-slate-800">
               {data.customerName}
             </p>
+            {data.clientIce && (
+              <p className="mt-1 text-sm text-slate-600">
+                <span className="font-semibold">{t("ice")}:</span> {data.clientIce}
+              </p>
+            )}
           </div>
         </div>
 
@@ -186,9 +193,9 @@ export function Invoice({
                 <td className="py-4 text-start font-medium text-slate-800">
                   {t("fuelPurchase")} — {fuelLabel}
                 </td>
-                <td className="py-4 text-center text-slate-600">1</td>
+                <td className="py-4 text-center text-slate-600">{data.quantity}</td>
                 <td className="py-4 text-end font-mono text-slate-700">
-                  {formatCurrency(totalHT)}
+                  {formatCurrency(data.unitPrice)}
                 </td>
                 <td className="py-4 text-end font-mono font-semibold text-slate-800">
                   {formatCurrency(totalHT)}
@@ -232,10 +239,16 @@ export function Invoice({
         <div className="border-t border-slate-200 px-8 py-8">
           <div className="flex justify-end">
             <div className="text-center">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
                 {t("signature")}
               </p>
-              <div className="mt-2 h-20 w-48 rounded-lg border-2 border-dashed border-slate-300" />
+              <div className="h-28 w-56 flex items-center justify-center">
+                <img
+                  src="/signature.png"
+                  alt="Signature & Cachet"
+                  className="max-h-full max-w-full object-contain mix-blend-multiply"
+                />
+              </div>
             </div>
           </div>
         </div>
