@@ -7,7 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { db } from "@/lib/firebase";
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+} from "firebase/firestore";
 
 interface ClientData {
   id: string;
@@ -19,7 +26,7 @@ export default function ClientsPage() {
   const { t } = useLocale();
   const [clients, setClients] = useState<ClientData[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Form State
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState("");
@@ -33,10 +40,12 @@ export default function ClientsPage() {
       }
       const querySnapshot = await getDocs(collection(db, "clients"));
       const clientsList: ClientData[] = [];
-      querySnapshot.forEach((doc) => {
-        clientsList.push({ id: doc.id, ...doc.data() } as ClientData);
+      querySnapshot.forEach((docSnap) => {
+        clientsList.push({
+          id: docSnap.id,
+          ...docSnap.data(),
+        } as ClientData);
       });
-      // Sort by name
       clientsList.sort((a, b) => a.name.localeCompare(b.name));
       setClients(clientsList);
     } catch (error) {
@@ -50,34 +59,34 @@ export default function ClientsPage() {
     fetchClients();
   }, [fetchClients]);
 
+  const resetForm = () => {
+    setEditingId(null);
+    setName("");
+    setIce("");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
 
     try {
       if (editingId) {
-        // Update
         const clientRef = doc(db, "clients", editingId);
         await updateDoc(clientRef, {
           name: name.trim(),
           ice: ice.trim(),
         });
       } else {
-        // Create
         await addDoc(collection(db, "clients"), {
           name: name.trim(),
           ice: ice.trim(),
         });
       }
-      
-      // Reset form
-      setName("");
-      setIce("");
-      setEditingId(null);
+
+      resetForm();
       fetchClients();
     } catch (error) {
       console.error("Error saving client:", error);
-      alert("Failed to save client. Check Firebase configuration.");
     }
   };
 
@@ -98,86 +107,214 @@ export default function ClientsPage() {
   };
 
   return (
-    <section className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-4xl mx-auto space-y-6">
-      <Card className="border-white/10 bg-white/5 backdrop-blur-2xl shadow-2xl shadow-black/30">
-        <CardHeader className="pb-4 border-b border-white/5">
-          <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-400"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {/* ── Add / Edit Client Card ── */}
+      <Card className="mx-auto max-w-lg border-white/10 bg-white/5 backdrop-blur-2xl shadow-2xl shadow-black/30">
+        <CardHeader className="text-center pb-2">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 shadow-lg shadow-emerald-500/20">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-6 w-6 text-white"
+              aria-hidden="true"
+            >
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-bold text-white tracking-tight">
             {t("manageClients")}
           </h2>
         </CardHeader>
-        <CardContent className="pt-6">
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end mb-8 p-4 bg-slate-800/50 rounded-xl border border-white/5">
+
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Client Name */}
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-slate-300 text-sm">{t("customerName")}</Label>
+              <Label htmlFor="client-name-input" className="text-slate-300 text-sm">
+                {t("customerName")}
+              </Label>
               <Input
-                id="name"
+                id="client-name-input"
+                type="text"
+                required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder={t("customerNamePlaceholder")}
-                required
-                className="border-white/15 bg-white/5 text-white placeholder:text-slate-500 focus:border-emerald-500/50"
+                className="border-white/15 bg-white/5 text-white placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20 transition-all"
               />
             </div>
+
+            {/* Client ICE */}
             <div className="space-y-2">
-              <Label htmlFor="ice" className="text-slate-300 text-sm">{t("clientIce")}</Label>
+              <Label htmlFor="client-ice-input" className="text-slate-300 text-sm">
+                {t("clientIce")}
+              </Label>
               <Input
-                id="ice"
+                id="client-ice-input"
+                type="text"
                 value={ice}
                 onChange={(e) => setIce(e.target.value)}
                 placeholder={t("clientIcePlaceholder")}
-                className="border-white/15 bg-white/5 text-white placeholder:text-slate-500 focus:border-emerald-500/50"
+                className="border-white/15 bg-white/5 text-white placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20 transition-all"
               />
             </div>
-            <div className="flex gap-2">
-              <Button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-600 text-white">
-                {editingId ? t("updateClient") : t("addClient")}
-              </Button>
+
+            {/* Buttons */}
+            <div className="flex gap-3 pt-2">
               {editingId && (
-                <Button type="button" variant="outline" onClick={() => { setEditingId(null); setName(""); setIce(""); }} className="border-white/20 text-slate-300 hover:text-white">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={resetForm}
+                  className="flex-1 border-white/20 bg-white/5 hover:bg-white/10 text-white hover:text-white"
+                  id="cancel-edit-button"
+                >
                   {t("cancel")}
                 </Button>
               )}
+              <Button
+                type="submit"
+                className={`${editingId ? "flex-[2]" : "w-full"} bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold shadow-lg shadow-emerald-500/25 transition-all duration-200`}
+                id="save-client-button"
+              >
+                {editingId ? t("updateClient") : t("addClient")}
+              </Button>
             </div>
           </form>
+        </CardContent>
+      </Card>
 
+      {/* ── Client List ── */}
+      <Card className="mx-auto max-w-lg border-white/10 bg-white/5 backdrop-blur-2xl shadow-2xl shadow-black/30 mt-6">
+        <CardHeader className="pb-3">
+          <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
+            {t("clientsTitle")}
+          </h3>
+        </CardHeader>
+        <CardContent className="pt-0">
           {loading ? (
-            <div className="text-center py-8 text-slate-400">{t("loadingClients")}</div>
+            <div className="flex items-center justify-center py-12">
+              <svg
+                className="h-5 w-5 animate-spin text-emerald-400"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+              >
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                  className="opacity-25"
+                />
+                <path
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                  fill="currentColor"
+                  className="opacity-75"
+                />
+              </svg>
+              <span className="ms-3 text-sm text-slate-400">
+                {t("loadingClients")}
+              </span>
+            </div>
+          ) : clients.length === 0 ? (
+            <div className="py-12 text-center">
+              <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-white/5">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-5 w-5 text-slate-500"
+                  aria-hidden="true"
+                >
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <line x1="17" y1="11" x2="23" y2="11" />
+                </svg>
+              </div>
+              <p className="text-sm text-slate-500">{t("noClientsFound")}</p>
+            </div>
           ) : (
-            <div className="rounded-xl border border-white/10 overflow-hidden">
-              <table className="w-full text-sm text-start">
-                <thead className="bg-slate-800/80 text-slate-300">
-                  <tr>
-                    <th className="px-4 py-3 font-medium text-start">{t("customerName")}</th>
-                    <th className="px-4 py-3 font-medium text-start">{t("ice")}</th>
-                    <th className="px-4 py-3 font-medium text-end">{t("actions")}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {clients.length === 0 ? (
-                    <tr>
-                      <td colSpan={3} className="px-4 py-8 text-center text-slate-500">
-                        {t("noClientsFound")}
-                      </td>
-                    </tr>
-                  ) : (
-                    clients.map((client) => (
-                      <tr key={client.id} className="hover:bg-white/5 transition-colors">
-                        <td className="px-4 py-3 font-medium text-slate-200 text-start">{client.name}</td>
-                        <td className="px-4 py-3 text-slate-400 font-mono text-start">{client.ice || "—"}</td>
-                        <td className="px-4 py-3 text-end space-x-2">
-                          <Button size="sm" variant="ghost" onClick={() => handleEdit(client)} className="h-8 text-blue-400 hover:text-blue-300 hover:bg-blue-400/10">
-                            {t("edit")}
-                          </Button>
-                          <Button size="sm" variant="ghost" onClick={() => handleDelete(client.id)} className="h-8 text-red-400 hover:text-red-300 hover:bg-red-400/10">
-                            {t("delete")}
-                          </Button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+            <div className="space-y-2">
+              {clients.map((client) => (
+                <div
+                  key={client.id}
+                  className="group flex items-center justify-between rounded-lg border border-white/5 bg-white/[0.02] px-4 py-3 transition-all hover:bg-white/5 hover:border-white/10"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-slate-200 truncate">
+                      {client.name}
+                    </p>
+                    {client.ice && (
+                      <p className="text-xs text-slate-500 font-mono mt-0.5">
+                        {t("ice")}: {client.ice}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1 ms-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleEdit(client)}
+                      className="h-8 w-8 p-0 text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10"
+                      id={`edit-client-${client.id}`}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="h-3.5 w-3.5"
+                        aria-hidden="true"
+                      >
+                        <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                        <path d="m15 5 4 4" />
+                      </svg>
+                      <span className="sr-only">{t("edit")}</span>
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleDelete(client.id)}
+                      className="h-8 w-8 p-0 text-slate-400 hover:text-red-400 hover:bg-red-500/10"
+                      id={`delete-client-${client.id}`}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="h-3.5 w-3.5"
+                        aria-hidden="true"
+                      >
+                        <path d="M3 6h18" />
+                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                      </svg>
+                      <span className="sr-only">{t("delete")}</span>
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </CardContent>
