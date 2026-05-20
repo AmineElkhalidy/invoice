@@ -1,41 +1,28 @@
-"use server";
-
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+"use client";
 
 const VALID_USERNAME = "admin";
 const VALID_PASSWORD = "password";
-const SESSION_COOKIE = "invoice_session";
+const SESSION_KEY = "invoice_session";
 
-export async function login(
-  _prevState: { error: string } | null,
-  formData: FormData
-): Promise<{ error: string } | null> {
-  const username = formData.get("username") as string;
-  const password = formData.get("password") as string;
-
+export function loginClient(username: string, password: string): { success: boolean; error?: string } {
   if (username === VALID_USERNAME && password === VALID_PASSWORD) {
-    const cookieStore = await cookies();
-    cookieStore.set(SESSION_COOKIE, "authenticated", {
-      httpOnly: true,
-      path: "/",
-      maxAge: 60 * 60 * 24, // 24 hours
-      sameSite: "lax",
-    });
-    redirect("/dashboard");
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(SESSION_KEY, "authenticated");
+    }
+    return { success: true };
   }
-
-  return { error: "invalid_credentials" };
+  return { success: false, error: "invalid_credentials" };
 }
 
-export async function logout(): Promise<void> {
-  const cookieStore = await cookies();
-  cookieStore.delete(SESSION_COOKIE);
-  redirect("/login");
+export function logoutClient(): void {
+  if (typeof window !== "undefined") {
+    window.localStorage.removeItem(SESSION_KEY);
+  }
 }
 
-export async function getSession(): Promise<boolean> {
-  const cookieStore = await cookies();
-  const session = cookieStore.get(SESSION_COOKIE);
-  return session?.value === "authenticated";
+export function getSessionClient(): boolean {
+  if (typeof window !== "undefined") {
+    return window.localStorage.getItem(SESSION_KEY) === "authenticated";
+  }
+  return false;
 }

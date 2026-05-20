@@ -1,17 +1,41 @@
 "use client";
 
-import { useActionState } from "react";
-import { login } from "@/lib/auth";
+import { useState } from "react";
+import { loginClient } from "@/lib/auth";
 import { useLocale } from "@/components/LocaleProvider";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
-  const [state, formAction, isPending] = useActionState(login, null);
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, setIsPending] = useState(false);
   const { t } = useLocale();
+  const router = useRouter();
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsPending(true);
+    setError(null);
+
+    const formData = new FormData(e.currentTarget);
+    const username = formData.get("username") as string;
+    const password = formData.get("password") as string;
+
+    // Simulate slight network delay for the animation effect
+    setTimeout(() => {
+      const result = loginClient(username, password);
+      if (result.success) {
+        router.push("/dashboard");
+      } else {
+        setError(result.error || "invalid_credentials");
+        setIsPending(false);
+      }
+    }, 500);
+  };
 
   return (
     <main className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-slate-950 px-4">
@@ -55,7 +79,7 @@ export default function LoginPage() {
         </CardHeader>
 
         <CardContent>
-          <form action={formAction} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="username" className="text-slate-300 text-sm">
                 {t("username")}
@@ -86,7 +110,7 @@ export default function LoginPage() {
               />
             </div>
 
-            {state?.error && (
+            {error && (
               <div
                 role="alert"
                 className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-sm text-red-400 animate-in fade-in slide-in-from-top-1 duration-300"

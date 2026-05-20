@@ -1,16 +1,30 @@
-import { redirect } from "next/navigation";
-import { getSession } from "@/lib/auth";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { getSessionClient } from "@/lib/auth";
 import { Header } from "@/components/Header";
 
-export default async function ClientsLayout({
+export default function ClientsLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const isAuthenticated = await getSession();
+  const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
-  if (!isAuthenticated) {
-    redirect("/login");
+  useEffect(() => {
+    const auth = getSessionClient();
+    if (!auth) {
+      router.push("/login");
+    } else {
+      setIsAuthenticated(true);
+    }
+  }, [router]);
+
+  // Don't render children until we know they are authenticated to avoid hydration flicker
+  if (isAuthenticated === null) {
+    return <div className="min-h-dvh bg-slate-950 flex items-center justify-center"></div>;
   }
 
   return (

@@ -2,13 +2,20 @@
 
 import { useLocale } from "@/components/LocaleProvider";
 import { LanguageToggle } from "@/components/LanguageToggle";
-import { logout } from "@/lib/auth";
+import { logoutClient } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { stationConfig } from "@/config/station";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export function Header() {
   const { t } = useLocale();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    logoutClient();
+    router.push("/login");
+  };
 
   return (
     <header className="print:hidden sticky top-0 z-50 border-b border-white/10 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 backdrop-blur-xl">
@@ -50,17 +57,15 @@ export function Header() {
           </Link>
           <div className="w-px h-4 bg-white/20 mx-1"></div>
           <LanguageToggle />
-          <form action={logout}>
-            <Button
-              type="submit"
-              variant="ghost"
-              size="sm"
-              className="text-xs text-slate-400 hover:text-white hover:bg-white/10 transition-all duration-200"
-              id="logout-button"
-            >
-              {t("logout")}
-            </Button>
-          </form>
+          <Button
+            onClick={handleLogout}
+            variant="ghost"
+            size="sm"
+            className="text-xs text-slate-400 hover:text-white hover:bg-white/10 transition-all duration-200"
+            id="logout-button"
+          >
+            {t("logout")}
+          </Button>
         </div>
       </nav>
     </header>
