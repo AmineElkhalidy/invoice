@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  FlatList,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
@@ -18,6 +17,8 @@ import { logoutClient } from "../../lib/auth";
 import { stationConfig } from "../../config/station";
 import { db } from "../../lib/firebase";
 import { collection, getDocs, addDoc } from "firebase/firestore";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { s, vs, ms } from "../../lib/responsive";
 
 interface SavedClient {
   name: string;
@@ -57,38 +58,61 @@ export default function DashboardScreen() {
     c.name.toLowerCase().includes(customerName.toLowerCase())
   );
 
-  const handleGenerate = useCallback(() => {
+  const handleGenerate = useCallback(async () => {
     const price = parseFloat(unitPrice);
     const qty = parseFloat(quantity);
     if (!customerName.trim() || isNaN(price) || price <= 0 || isNaN(qty) || qty <= 0) return;
 
+    const trimmedName = customerName.trim();
+    const trimmedIce = clientIce.trim();
+
     // Save client if new
     const exists = savedClients.find(
-      (c) => c.name.toLowerCase() === customerName.trim().toLowerCase()
+      (c) => c.name.toLowerCase() === trimmedName.toLowerCase()
     );
     if (!exists) {
       addDoc(collection(db, "clients"), {
-        name: customerName.trim(),
-        ice: clientIce.trim(),
+        name: trimmedName,
+        ice: trimmedIce,
       }).catch(console.error);
     }
 
-    // Generate invoice ID
+    // Generate sequential invoice ID per client (matching web version)
     const now = new Date();
-    const datePart = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
-    const rand = String(Math.floor(1000 + Math.random() * 9000));
-    const invoiceId = `FAC-${datePart}-${rand}`;
+    const year = now.getFullYear();
+    const datePart = `${year}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
+    const normalizedName = trimmedName.toLowerCase();
+    const storageKey = `invoice_counts_${year}`;
+    let counts: Record<string, number> = {};
+
+    try {
+      const stored = await AsyncStorage.getItem(storageKey);
+      if (stored) {
+        counts = JSON.parse(stored);
+      }
+    } catch (e) {}
+
+    const currentCount = counts[normalizedName] || 0;
+    const nextCount = currentCount + 1;
+    counts[normalizedName] = nextCount;
+
+    try {
+      await AsyncStorage.setItem(storageKey, JSON.stringify(counts));
+    } catch (e) {}
+
+    const invoiceId = `FAC-${datePart}-${String(nextCount).padStart(4, "0")}`;
 
     router.push({
       pathname: "/(app)/invoice",
       params: {
         id: invoiceId,
-        customerName: customerName.trim(),
-        clientIce: clientIce.trim(),
+        customerName: trimmedName,
+        clientIce: trimmedIce,
         unitPrice: String(price),
         quantity: String(qty),
         fuelType,
         date: now.toISOString(),
+        invoiceNumber: String(nextCount),
       },
     });
   }, [customerName, clientIce, unitPrice, quantity, fuelType, savedClients, router]);
@@ -113,7 +137,7 @@ export default function DashboardScreen() {
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             >
-              <Text style={{ fontSize: 16 }}>⛽</Text>
+              <Text style={{ fontSize: ms(16) }}>⛽</Text>
             </LinearGradient>
             <View>
               <Text style={styles.headerTitle}>{stationConfig.name}</Text>
@@ -143,7 +167,7 @@ export default function DashboardScreen() {
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               >
-                <Text style={{ fontSize: 22 }}>📄</Text>
+                <Text style={{ fontSize: ms(22) }}>📄</Text>
               </LinearGradient>
               <Text style={styles.cardTitle}>{t("dashboardTitle")}</Text>
             </View>
@@ -185,7 +209,7 @@ export default function DashboardScreen() {
             )}
 
             {/* ICE */}
-            <Text style={[styles.label, { marginTop: 16 }]}>{t("clientIce")}</Text>
+            <Text style={[styles.label, { marginTop: vs(16) }]}>{t("clientIce")}</Text>
             <TextInput
               style={styles.input}
               value={clientIce}
@@ -197,7 +221,7 @@ export default function DashboardScreen() {
             {/* Price & Quantity */}
             <View style={styles.row}>
               <View style={styles.halfCol}>
-                <Text style={[styles.label, { marginTop: 16 }]}>{t("unitPriceInput")}</Text>
+                <Text style={[styles.label, { marginTop: vs(16) }]}>{t("unitPriceInput")}</Text>
                 <TextInput
                   style={[styles.input, styles.monoInput]}
                   value={unitPrice}
@@ -208,7 +232,7 @@ export default function DashboardScreen() {
                 />
               </View>
               <View style={styles.halfCol}>
-                <Text style={[styles.label, { marginTop: 16 }]}>{t("quantityInput")}</Text>
+                <Text style={[styles.label, { marginTop: vs(16) }]}>{t("quantityInput")}</Text>
                 <TextInput
                   style={[styles.input, styles.monoInput]}
                   value={quantity}
@@ -221,7 +245,7 @@ export default function DashboardScreen() {
             </View>
 
             {/* Fuel Type */}
-            <Text style={[styles.label, { marginTop: 16 }]}>{t("fuelType")}</Text>
+            <Text style={[styles.label, { marginTop: vs(16) }]}>{t("fuelType")}</Text>
             <View style={styles.fuelRow}>
               <TouchableOpacity
                 style={[
@@ -258,7 +282,7 @@ export default function DashboardScreen() {
             </View>
 
             {/* Submit */}
-            <TouchableOpacity onPress={handleGenerate} activeOpacity={0.8} style={{ marginTop: 24 }}>
+            <TouchableOpacity onPress={handleGenerate} activeOpacity={0.8} style={{ marginTop: vs(24) }}>
               <LinearGradient
                 colors={["#10b981", "#14b8a6"]}
                 start={{ x: 0, y: 0 }}
@@ -281,83 +305,83 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: s(16),
+    paddingVertical: vs(12),
     borderBottomWidth: 1,
     borderBottomColor: "rgba(255,255,255,0.1)",
     backgroundColor: "#0f172a",
   },
-  headerLeft: { flexDirection: "row", alignItems: "center", gap: 10 },
+  headerLeft: { flexDirection: "row", alignItems: "center", gap: s(10) },
   headerIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    width: s(36),
+    height: s(36),
+    borderRadius: s(10),
     justifyContent: "center",
     alignItems: "center",
   },
-  headerTitle: { color: "#fff", fontSize: 13, fontWeight: "700" },
-  headerSub: { color: "#64748b", fontSize: 10 },
-  headerRight: { flexDirection: "row", gap: 6 },
+  headerTitle: { color: "#fff", fontSize: ms(13), fontWeight: "700" },
+  headerSub: { color: "#64748b", fontSize: ms(10) },
+  headerRight: { flexDirection: "row", gap: s(6) },
   headerBtn: {
     backgroundColor: "rgba(255,255,255,0.08)",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 6,
+    paddingHorizontal: s(10),
+    paddingVertical: vs(6),
+    borderRadius: s(6),
   },
-  headerBtnText: { color: "#94a3b8", fontSize: 11, fontWeight: "600" },
-  content: { padding: 16, paddingBottom: 40 },
+  headerBtnText: { color: "#94a3b8", fontSize: ms(11), fontWeight: "600" },
+  content: { padding: s(16), paddingBottom: vs(40) },
   card: {
     backgroundColor: "rgba(255,255,255,0.05)",
-    borderRadius: 16,
+    borderRadius: s(16),
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.1)",
-    padding: 24,
+    padding: s(24),
   },
-  cardHeader: { alignItems: "center", marginBottom: 20 },
+  cardHeader: { alignItems: "center", marginBottom: vs(20) },
   cardIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
+    width: s(48),
+    height: s(48),
+    borderRadius: s(14),
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: vs(10),
   },
-  cardTitle: { color: "#fff", fontSize: 18, fontWeight: "800", letterSpacing: -0.3 },
-  label: { color: "#94a3b8", fontSize: 13, fontWeight: "500", marginBottom: 8 },
+  cardTitle: { color: "#fff", fontSize: ms(18), fontWeight: "800", letterSpacing: -0.3 },
+  label: { color: "#94a3b8", fontSize: ms(13), fontWeight: "500", marginBottom: vs(8) },
   input: {
     backgroundColor: "rgba(255,255,255,0.05)",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.15)",
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    borderRadius: s(10),
+    paddingHorizontal: s(14),
+    paddingVertical: vs(12),
     color: "#fff",
-    fontSize: 15,
+    fontSize: ms(15),
   },
   monoInput: { fontVariant: ["tabular-nums"] },
   suggestions: {
     backgroundColor: "#1e293b",
-    borderRadius: 10,
+    borderRadius: s(10),
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.1)",
-    marginTop: 4,
+    marginTop: vs(4),
     overflow: "hidden",
   },
   suggestionItem: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingHorizontal: s(14),
+    paddingVertical: vs(10),
     borderBottomWidth: 1,
     borderBottomColor: "rgba(255,255,255,0.05)",
   },
-  suggestionName: { color: "#e2e8f0", fontSize: 14, fontWeight: "500" },
-  suggestionIce: { color: "#64748b", fontSize: 11, marginTop: 2 },
-  row: { flexDirection: "row", gap: 12 },
+  suggestionName: { color: "#e2e8f0", fontSize: ms(14), fontWeight: "500" },
+  suggestionIce: { color: "#64748b", fontSize: ms(11), marginTop: vs(2) },
+  row: { flexDirection: "row", gap: s(12) },
   halfCol: { flex: 1 },
-  fuelRow: { flexDirection: "row", gap: 10 },
+  fuelRow: { flexDirection: "row", gap: s(10) },
   fuelBtn: {
     flex: 1,
-    paddingVertical: 12,
-    borderRadius: 10,
+    paddingVertical: vs(12),
+    borderRadius: s(10),
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.15)",
     alignItems: "center",
@@ -367,17 +391,17 @@ const styles = StyleSheet.create({
     borderColor: "#10b981",
     backgroundColor: "rgba(16,185,129,0.15)",
   },
-  fuelBtnText: { color: "#94a3b8", fontSize: 14, fontWeight: "600" },
+  fuelBtnText: { color: "#94a3b8", fontSize: ms(14), fontWeight: "600" },
   fuelBtnTextActive: { color: "#34d399" },
   submitBtn: {
-    borderRadius: 10,
-    paddingVertical: 14,
+    borderRadius: s(10),
+    paddingVertical: vs(14),
     alignItems: "center",
     shadowColor: "#10b981",
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: vs(4) },
     shadowOpacity: 0.25,
-    shadowRadius: 12,
+    shadowRadius: s(12),
     elevation: 6,
   },
-  submitBtnText: { color: "#fff", fontSize: 16, fontWeight: "700" },
+  submitBtnText: { color: "#fff", fontSize: ms(16), fontWeight: "700" },
 });

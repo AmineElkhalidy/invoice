@@ -21,6 +21,7 @@ import {
   deleteDoc,
   doc,
 } from "firebase/firestore";
+import { s, vs, ms } from "../../lib/responsive";
 
 interface ClientData {
   id: string;
@@ -119,7 +120,7 @@ export default function ClientsScreen() {
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             >
-              <Text style={{ fontSize: 22 }}>👥</Text>
+              <Text style={{ fontSize: ms(22) }}>👥</Text>
             </LinearGradient>
             <Text style={styles.cardTitle}>{t("manageClients")}</Text>
           </View>
@@ -133,7 +134,7 @@ export default function ClientsScreen() {
             placeholderTextColor="#64748b"
           />
 
-          <Text style={[styles.label, { marginTop: 16 }]}>{t("clientIce")}</Text>
+          <Text style={[styles.label, { marginTop: vs(16) }]}>{t("clientIce")}</Text>
           <TextInput
             style={styles.input}
             value={ice}
@@ -168,7 +169,7 @@ export default function ClientsScreen() {
         </View>
 
         {/* Client List */}
-        <View style={[styles.card, { marginTop: 16 }]}>
+        <View style={[styles.card, { marginTop: vs(16) }]}>
           <Text style={styles.sectionTitle}>{t("clientsTitle")}</Text>
 
           {loading ? (
@@ -178,7 +179,7 @@ export default function ClientsScreen() {
             </View>
           ) : clients.length === 0 ? (
             <View style={styles.emptyState}>
-              <Text style={{ fontSize: 28 }}>👥</Text>
+              <Text style={{ fontSize: ms(28) }}>👥</Text>
               <Text style={styles.emptyText}>{t("noClientsFound")}</Text>
             </View>
           ) : (
@@ -217,88 +218,88 @@ export default function ClientsScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: "#020617" },
-  content: { padding: 16, paddingBottom: 40 },
+  content: { padding: s(16), paddingBottom: vs(40) },
   card: {
     backgroundColor: "rgba(255,255,255,0.05)",
-    borderRadius: 16,
+    borderRadius: s(16),
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.1)",
-    padding: 24,
+    padding: s(24),
   },
-  cardHeader: { alignItems: "center", marginBottom: 20 },
+  cardHeader: { alignItems: "center", marginBottom: vs(20) },
   cardIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
+    width: s(48),
+    height: s(48),
+    borderRadius: s(14),
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: vs(10),
   },
-  cardTitle: { color: "#fff", fontSize: 18, fontWeight: "800", letterSpacing: -0.3 },
-  label: { color: "#94a3b8", fontSize: 13, fontWeight: "500", marginBottom: 8 },
+  cardTitle: { color: "#fff", fontSize: ms(18), fontWeight: "800", letterSpacing: -0.3 },
+  label: { color: "#94a3b8", fontSize: ms(13), fontWeight: "500", marginBottom: vs(8) },
   input: {
     backgroundColor: "rgba(255,255,255,0.05)",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.15)",
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    borderRadius: s(10),
+    paddingHorizontal: s(14),
+    paddingVertical: vs(12),
     color: "#fff",
-    fontSize: 15,
+    fontSize: ms(15),
   },
-  btnRow: { flexDirection: "row", gap: 10, marginTop: 20 },
+  btnRow: { flexDirection: "row", gap: s(10), marginTop: vs(20) },
   cancelBtn: {
     flex: 1,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.2)",
     backgroundColor: "rgba(255,255,255,0.05)",
-    borderRadius: 10,
-    paddingVertical: 14,
+    borderRadius: s(10),
+    paddingVertical: vs(14),
     alignItems: "center",
   },
-  cancelBtnText: { color: "#fff", fontSize: 14, fontWeight: "600" },
+  cancelBtnText: { color: "#fff", fontSize: ms(14), fontWeight: "600" },
   submitBtn: {
-    borderRadius: 10,
-    paddingVertical: 14,
+    borderRadius: s(10),
+    paddingVertical: vs(14),
     alignItems: "center",
     shadowColor: "#10b981",
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: vs(4) },
     shadowOpacity: 0.25,
-    shadowRadius: 12,
+    shadowRadius: s(12),
     elevation: 6,
   },
-  submitBtnText: { color: "#fff", fontSize: 15, fontWeight: "700" },
+  submitBtnText: { color: "#fff", fontSize: ms(15), fontWeight: "700" },
   sectionTitle: {
     color: "#94a3b8",
-    fontSize: 11,
+    fontSize: ms(11),
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 1,
-    marginBottom: 12,
+    marginBottom: vs(12),
   },
-  emptyState: { alignItems: "center", paddingVertical: 32, gap: 8 },
-  emptyText: { color: "#64748b", fontSize: 13 },
+  emptyState: { alignItems: "center", paddingVertical: vs(32), gap: vs(8) },
+  emptyText: { color: "#64748b", fontSize: ms(13) },
   clientRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 10,
+    paddingVertical: vs(12),
+    paddingHorizontal: s(12),
+    borderRadius: s(10),
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.05)",
     backgroundColor: "rgba(255,255,255,0.02)",
-    marginBottom: 6,
+    marginBottom: vs(6),
   },
-  clientName: { color: "#e2e8f0", fontSize: 14, fontWeight: "500" },
-  clientIce: { color: "#64748b", fontSize: 11, marginTop: 2, fontVariant: ["tabular-nums"] },
-  clientActions: { flexDirection: "row", gap: 4 },
+  clientName: { color: "#e2e8f0", fontSize: ms(14), fontWeight: "500" },
+  clientIce: { color: "#64748b", fontSize: ms(11), marginTop: vs(2), fontVariant: ["tabular-nums"] },
+  clientActions: { flexDirection: "row", gap: s(4) },
   actionBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
+    width: s(36),
+    height: s(36),
+    borderRadius: s(8),
     justifyContent: "center",
     alignItems: "center",
   },
-  editIcon: { fontSize: 16 },
-  deleteIcon: { fontSize: 16 },
+  editIcon: { fontSize: ms(16) },
+  deleteIcon: { fontSize: ms(16) },
 });

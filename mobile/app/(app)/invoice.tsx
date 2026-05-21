@@ -4,8 +4,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
+import { File, Paths } from "expo-file-system";
 import { useLocale } from "../../context/LocaleProvider";
 import { stationConfig } from "../../config/station";
+import { s, vs, ms } from "../../lib/responsive";
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("fr-FR", {
@@ -140,6 +142,7 @@ export default function InvoiceScreen() {
     quantity: string;
     fuelType: string;
     date: string;
+    invoiceNumber: string;
   }>();
   const { t, locale } = useLocale();
   const router = useRouter();
@@ -154,6 +157,8 @@ export default function InvoiceScreen() {
     date: params.date || new Date().toISOString(),
   };
 
+  const invoiceNumber = params.invoiceNumber || "1";
+
   const totalHT = data.unitPrice * data.quantity;
   const tvaAmount = totalHT * 0.1;
   const totalTTC = totalHT + tvaAmount;
@@ -163,7 +168,14 @@ export default function InvoiceScreen() {
     try {
       const html = generateInvoiceHTML(data, t, locale);
       const { uri } = await Print.printToFileAsync({ html });
-      await Sharing.shareAsync(uri, { mimeType: "application/pdf" });
+
+      // Rename to: Station BENKHALED - Client Name - Facture N°X.pdf
+      const pdfFileName = `${stationConfig.name} - ${data.customerName} - Facture N°${invoiceNumber}.pdf`;
+      const source = new File(uri);
+      const dest = new File(Paths.cache, pdfFileName);
+      source.move(dest);
+
+      await Sharing.shareAsync(dest.uri, { mimeType: "application/pdf" });
     } catch (e) {
       Alert.alert("Error", "Failed to generate PDF");
       console.error(e);
@@ -180,7 +192,7 @@ export default function InvoiceScreen() {
             colors={["#1e293b", "#334155"]}
             style={styles.invoiceHeader}
           >
-            <View>
+            <View style={{ flex: 1 }}>
               <Text style={styles.invoiceHeaderTitle}>{stationConfig.name}</Text>
               <Text style={styles.invoiceHeaderSub}>{stationConfig.address}</Text>
               <Text style={styles.invoiceHeaderSub}>
@@ -194,7 +206,7 @@ export default function InvoiceScreen() {
 
           {/* Meta */}
           <View style={styles.metaRow}>
-            <View>
+            <View style={{ flex: 1 }}>
               <Text style={styles.metaText}>
                 <Text style={styles.metaLabel}>{t("ice")}:</Text> {stationConfig.ice}
               </Text>
@@ -202,7 +214,7 @@ export default function InvoiceScreen() {
                 <Text style={styles.metaLabel}>{t("rc")}:</Text> {stationConfig.rc}
               </Text>
             </View>
-            <View style={{ alignItems: "flex-end" }}>
+            <View style={{ alignItems: "flex-end", flex: 1 }}>
               <Text style={styles.metaText}>
                 <Text style={styles.metaLabel}>{t("identifiantFiscal")}:</Text>{" "}
                 {stationConfig.identifiantFiscal}
@@ -321,98 +333,98 @@ export default function InvoiceScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: "#020617" },
-  content: { padding: 16, paddingBottom: 40 },
+  content: { padding: s(16), paddingBottom: vs(40) },
   invoiceCard: {
     backgroundColor: "#fff",
-    borderRadius: 12,
+    borderRadius: s(12),
     overflow: "hidden",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 8 },
+    shadowOffset: { width: 0, height: vs(8) },
     shadowOpacity: 0.3,
-    shadowRadius: 20,
+    shadowRadius: s(20),
     elevation: 10,
   },
-  invoiceHeader: { padding: 20, flexDirection: "row", justifyContent: "space-between" },
-  invoiceHeaderTitle: { color: "#fff", fontSize: 16, fontWeight: "800" },
-  invoiceHeaderSub: { color: "#cbd5e1", fontSize: 11, marginTop: 2 },
+  invoiceHeader: { padding: s(20), flexDirection: "row", justifyContent: "space-between" },
+  invoiceHeaderTitle: { color: "#fff", fontSize: ms(16), fontWeight: "800" },
+  invoiceHeaderSub: { color: "#cbd5e1", fontSize: ms(11), marginTop: vs(2) },
   badge: {
     backgroundColor: "#10b981",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 4,
+    paddingHorizontal: s(10),
+    paddingVertical: vs(4),
+    borderRadius: s(4),
     alignSelf: "flex-start",
   },
-  badgeText: { color: "#fff", fontSize: 9, fontWeight: "800", textTransform: "uppercase", letterSpacing: 1 },
+  badgeText: { color: "#fff", fontSize: ms(9), fontWeight: "800", textTransform: "uppercase", letterSpacing: 1 },
   metaRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    padding: 14,
+    padding: s(14),
     borderBottomWidth: 1,
     borderBottomColor: "#e2e8f0",
   },
   metaLabel: { fontWeight: "600", color: "#64748b" },
-  metaText: { fontSize: 11, color: "#334155", marginBottom: 2 },
+  metaText: { fontSize: ms(11), color: "#334155", marginBottom: vs(2) },
   infoRow: {
     flexDirection: "row",
-    padding: 14,
+    padding: s(14),
     borderBottomWidth: 1,
     borderBottomColor: "#e2e8f0",
-    gap: 12,
+    gap: s(12),
   },
-  infoLabel: { fontSize: 12, fontWeight: "700", color: "#1e293b" },
+  infoLabel: { fontSize: ms(12), fontWeight: "700", color: "#1e293b" },
   invoiceId: { fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace", color: "#059669" },
-  infoDate: { fontSize: 11, color: "#64748b", marginTop: 4 },
+  infoDate: { fontSize: ms(11), color: "#64748b", marginTop: vs(4) },
   clientBox: {
     backgroundColor: "#f8fafc",
     borderWidth: 1,
     borderColor: "#e2e8f0",
-    borderRadius: 8,
-    padding: 10,
+    borderRadius: s(8),
+    padding: s(10),
     alignItems: "flex-end",
     flex: 1,
   },
-  clientLabel: { fontSize: 9, textTransform: "uppercase", color: "#94a3b8", letterSpacing: 1 },
-  clientName: { fontSize: 14, fontWeight: "800", color: "#1e293b", marginTop: 4 },
-  clientIce: { fontSize: 11, color: "#64748b", marginTop: 2 },
-  table: { padding: 14 },
-  tableHeaderRow: { flexDirection: "row", borderBottomWidth: 2, borderBottomColor: "#e2e8f0", paddingBottom: 8 },
-  th: { fontSize: 9, fontWeight: "700", textTransform: "uppercase", color: "#64748b", letterSpacing: 0.5 },
-  tableRow: { flexDirection: "row", paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#f1f5f9" },
-  td: { fontSize: 12, color: "#334155" },
+  clientLabel: { fontSize: ms(9), textTransform: "uppercase", color: "#94a3b8", letterSpacing: 1 },
+  clientName: { fontSize: ms(14), fontWeight: "800", color: "#1e293b", marginTop: vs(4) },
+  clientIce: { fontSize: ms(11), color: "#64748b", marginTop: vs(2) },
+  table: { padding: s(14) },
+  tableHeaderRow: { flexDirection: "row", borderBottomWidth: 2, borderBottomColor: "#e2e8f0", paddingBottom: vs(8) },
+  th: { fontSize: ms(9), fontWeight: "700", textTransform: "uppercase", color: "#64748b", letterSpacing: 0.5 },
+  tableRow: { flexDirection: "row", paddingVertical: vs(12), borderBottomWidth: 1, borderBottomColor: "#f1f5f9" },
+  td: { fontSize: ms(12), color: "#334155" },
   mono: { fontVariant: ["tabular-nums"] },
-  totals: { paddingHorizontal: 14, paddingVertical: 10, borderTopWidth: 1, borderTopColor: "#e2e8f0" },
-  totalRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 4 },
-  totalLabel: { fontSize: 12, color: "#64748b" },
-  totalValue: { fontSize: 12, color: "#64748b" },
-  grandTotal: { borderTopWidth: 2, borderTopColor: "#1e293b", paddingTop: 8, marginTop: 4 },
-  grandTotalLabel: { fontSize: 14, fontWeight: "800", color: "#0f172a" },
-  grandTotalValue: { fontSize: 14, fontWeight: "800", color: "#0f172a" },
+  totals: { paddingHorizontal: s(14), paddingVertical: vs(10), borderTopWidth: 1, borderTopColor: "#e2e8f0" },
+  totalRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: vs(4) },
+  totalLabel: { fontSize: ms(12), color: "#64748b" },
+  totalValue: { fontSize: ms(12), color: "#64748b" },
+  grandTotal: { borderTopWidth: 2, borderTopColor: "#1e293b", paddingTop: vs(8), marginTop: vs(4) },
+  grandTotalLabel: { fontSize: ms(14), fontWeight: "800", color: "#0f172a" },
+  grandTotalValue: { fontSize: ms(14), fontWeight: "800", color: "#0f172a" },
   invoiceFooter: {
     backgroundColor: "#f8fafc",
-    padding: 12,
+    padding: s(12),
     alignItems: "center",
   },
-  footerText: { fontSize: 10, color: "#94a3b8" },
-  actions: { flexDirection: "row", gap: 10, marginTop: 16 },
+  footerText: { fontSize: ms(10), color: "#94a3b8" },
+  actions: { flexDirection: "row", gap: s(10), marginTop: vs(16) },
   secondaryBtn: {
     flex: 1,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.2)",
     backgroundColor: "rgba(255,255,255,0.05)",
-    borderRadius: 10,
-    paddingVertical: 14,
+    borderRadius: s(10),
+    paddingVertical: vs(14),
     alignItems: "center",
   },
-  secondaryBtnText: { color: "#fff", fontSize: 14, fontWeight: "600" },
+  secondaryBtnText: { color: "#fff", fontSize: ms(14), fontWeight: "600" },
   primaryBtn: {
-    borderRadius: 10,
-    paddingVertical: 14,
+    borderRadius: s(10),
+    paddingVertical: vs(14),
     alignItems: "center",
     shadowColor: "#10b981",
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: vs(4) },
     shadowOpacity: 0.25,
-    shadowRadius: 12,
+    shadowRadius: s(12),
     elevation: 6,
   },
-  primaryBtnText: { color: "#fff", fontSize: 14, fontWeight: "700" },
+  primaryBtnText: { color: "#fff", fontSize: ms(14), fontWeight: "700" },
 });

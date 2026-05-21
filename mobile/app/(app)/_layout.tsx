@@ -1,13 +1,14 @@
 import { Tabs } from "expo-router";
 import { Text } from "react-native";
 import { useLocale } from "../../context/LocaleProvider";
+import { ms, vs } from "../../lib/responsive";
 
 function TabIcon({ name, size }: { name: string; color: string; size: number }) {
   const icons: Record<string, string> = {
     receipt: "📄",
     people: "👥",
   };
-  return <Text style={{ fontSize: size - 4 }}>{icons[name] || "•"}</Text>;
+  return <Text style={{ fontSize: ms(size - 4) }}>{icons[name] || "•"}</Text>;
 }
 
 export default function AppLayout() {
@@ -21,14 +22,14 @@ export default function AppLayout() {
           backgroundColor: "#0f172a",
           borderTopColor: "rgba(255,255,255,0.1)",
           borderTopWidth: 1,
-          height: 60,
-          paddingBottom: 8,
-          paddingTop: 8,
+          height: vs(60),
+          paddingBottom: vs(8),
+          paddingTop: vs(8),
         },
         tabBarActiveTintColor: "#34d399",
         tabBarInactiveTintColor: "#64748b",
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: ms(11),
           fontWeight: "600",
         },
       }}

@@ -13,6 +13,7 @@ import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { loginClient } from "../lib/auth";
 import { useLocale } from "../context/LocaleProvider";
+import { s, vs, ms } from "../lib/responsive";
 
 export default function LoginScreen() {
   const [username, setUsername] = useState("");
@@ -71,7 +72,7 @@ export default function LoginScreen() {
           autoCapitalize="none"
         />
 
-        <Text style={[styles.label, { marginTop: 16 }]}>{t("password")}</Text>
+        <Text style={[styles.label, { marginTop: vs(16) }]}>{t("password")}</Text>
         <TextInput
           style={styles.input}
           value={password}
@@ -116,104 +117,104 @@ const styles = StyleSheet.create({
     backgroundColor: "#020617",
     justifyContent: "center",
     alignItems: "center",
-    padding: 24,
+    padding: s(24),
   },
   langToggle: {
     position: "absolute",
-    top: 56,
-    right: 20,
+    top: vs(56),
+    right: s(20),
     backgroundColor: "rgba(255,255,255,0.08)",
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 8,
+    paddingHorizontal: s(14),
+    paddingVertical: vs(8),
+    borderRadius: s(8),
   },
   langToggleText: {
     color: "#94a3b8",
-    fontSize: 13,
+    fontSize: ms(13),
     fontWeight: "600",
   },
   logoWrap: {
-    marginBottom: 16,
+    marginBottom: vs(16),
   },
   logoBox: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
+    width: s(56),
+    height: s(56),
+    borderRadius: s(16),
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#10b981",
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: vs(4) },
     shadowOpacity: 0.3,
-    shadowRadius: 12,
+    shadowRadius: s(12),
     elevation: 8,
   },
   logoIcon: {
-    fontSize: 28,
+    fontSize: ms(28),
   },
   title: {
-    fontSize: 24,
+    fontSize: ms(24),
     fontWeight: "800",
     color: "#fff",
     letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: ms(14),
     color: "#94a3b8",
-    marginTop: 4,
-    marginBottom: 28,
+    marginTop: vs(4),
+    marginBottom: vs(28),
   },
   card: {
     width: "100%",
-    maxWidth: 400,
+    maxWidth: s(400),
     backgroundColor: "rgba(255,255,255,0.05)",
-    borderRadius: 16,
+    borderRadius: s(16),
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.1)",
-    padding: 24,
+    padding: s(24),
   },
   label: {
-    fontSize: 13,
+    fontSize: ms(13),
     color: "#94a3b8",
-    marginBottom: 8,
+    marginBottom: vs(8),
     fontWeight: "500",
   },
   input: {
     backgroundColor: "rgba(255,255,255,0.05)",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.15)",
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    borderRadius: s(10),
+    paddingHorizontal: s(14),
+    paddingVertical: vs(12),
     color: "#fff",
-    fontSize: 15,
+    fontSize: ms(15),
   },
   errorBox: {
-    marginTop: 16,
+    marginTop: vs(16),
     backgroundColor: "rgba(239,68,68,0.1)",
     borderWidth: 1,
     borderColor: "rgba(239,68,68,0.2)",
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    borderRadius: s(10),
+    paddingHorizontal: s(14),
+    paddingVertical: vs(10),
   },
   errorText: {
     color: "#f87171",
-    fontSize: 14,
+    fontSize: ms(14),
   },
   button: {
-    marginTop: 20,
-    borderRadius: 10,
-    paddingVertical: 14,
+    marginTop: vs(20),
+    borderRadius: s(10),
+    paddingVertical: vs(14),
     alignItems: "center",
     shadowColor: "#10b981",
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: vs(4) },
     shadowOpacity: 0.25,
-    shadowRadius: 12,
+    shadowRadius: s(12),
     elevation: 6,
   },
   buttonText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: ms(16),
     fontWeight: "700",
   },
 });
