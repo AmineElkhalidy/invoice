@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Crypto from "expo-crypto";
 import { db } from "./firebase";
 import {
   collection,
@@ -29,24 +30,13 @@ export interface SessionData {
 
 const SESSION_KEY = "invoice_session";
 
-// ─── Password Hashing ───────────────────────────────────────
-// Use a simple hash approach compatible with React Native
+// Use expo-crypto for SHA-256 to ensure hash matches the web app's Web Crypto API
 async function hashPassword(password: string): Promise<string> {
-  // Use the same SHA-256 approach — available in RN via crypto.subtle (Hermes)
-  // Fallback: simple deterministic hash for environments without crypto.subtle
-  if (typeof crypto !== "undefined" && crypto.subtle) {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(password);
-    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-  }
-  // Fallback: simple hash (djb2 + hex padding for compatibility)
-  let hash = 5381;
-  for (let i = 0; i < password.length; i++) {
-    hash = ((hash << 5) + hash + password.charCodeAt(i)) & 0xffffffff;
-  }
-  return Math.abs(hash).toString(16).padStart(64, "0");
+  return await Crypto.digestStringAsync(
+    Crypto.CryptoDigestAlgorithm.SHA256,
+    password,
+    { encoding: Crypto.CryptoEncoding.HEX }
+  );
 }
 
 // ─── Seed Admin ─────────────────────────────────────────────
