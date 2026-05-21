@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { getSessionClient, type SessionData } from "@/lib/auth";
 import { Header } from "@/components/Header";
 
-export default function DashboardLayout({
+export default function HistoryLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -30,7 +30,7 @@ export default function DashboardLayout({
     <div className="flex min-h-dvh flex-col bg-slate-950">
       <Header />
       <main className="flex-1 px-4 py-8 sm:px-6">
-        <div className="mx-auto max-w-4xl">{children}</div>
+        <div className="mx-auto max-w-5xl">{children}</div>
       </main>
     </div>
   );

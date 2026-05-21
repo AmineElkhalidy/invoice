@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getSessionClient } from "@/lib/auth";
+import { getSessionClient, type SessionData } from "@/lib/auth";
 import { Header } from "@/components/Header";
 
 export default function ClientsLayout({
@@ -11,19 +11,18 @@ export default function ClientsLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [session, setSession] = useState<SessionData | null | undefined>(undefined);
 
   useEffect(() => {
-    const auth = getSessionClient();
-    if (!auth) {
+    const s = getSessionClient();
+    if (!s) {
       router.push("/login");
     } else {
-      setIsAuthenticated(true);
+      setSession(s);
     }
   }, [router]);
 
-  // Don't render children until we know they are authenticated to avoid hydration flicker
-  if (isAuthenticated === null) {
+  if (session === undefined) {
     return <div className="min-h-dvh bg-slate-950 flex items-center justify-center"></div>;
   }
 

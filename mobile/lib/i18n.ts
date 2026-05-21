@@ -72,7 +72,48 @@ export const translations = {
     // Tabs
     tabInvoice: "Facture",
     tabClients: "Clients",
+    tabHistory: "Historique",
     tabSettings: "Réglages",
+
+    // User Management
+    manageUsers: "Gérer les utilisateurs",
+    usersTitle: "Utilisateurs",
+    addUser: "Ajouter un utilisateur",
+    updateUser: "Modifier l'utilisateur",
+    deleteUser: "Supprimer l'utilisateur",
+    usernamePlaceholder: "Entrez le nom d'utilisateur",
+    displayNameLabel: "Nom complet",
+    displayNamePlaceholder: "Entrez le nom complet",
+    roleLabel: "Rôle",
+    roleAdmin: "Administrateur",
+    roleUser: "Utilisateur",
+    noUsersFound: "Aucun utilisateur trouvé.",
+    confirmDeleteUser: "Êtes-vous sûr de vouloir supprimer cet utilisateur ?",
+    usernameExists: "Ce nom d'utilisateur existe déjà.",
+    passwordPlaceholder: "Entrez le mot de passe",
+
+    // Password Change
+    changePassword: "Changer le mot de passe",
+    currentPassword: "Mot de passe actuel",
+    newPassword: "Nouveau mot de passe",
+    confirmNewPassword: "Confirmer le nouveau mot de passe",
+    passwordChanged: "Mot de passe changé avec succès !",
+    passwordMismatch: "Les mots de passe ne correspondent pas.",
+    wrongCurrentPassword: "Mot de passe actuel incorrect.",
+
+    // Invoice History
+    invoiceHistory: "Historique des factures",
+    allInvoices: "Toutes les factures",
+    filterByClient: "Filtrer par client",
+    noInvoicesFound: "Aucune facture trouvée.",
+    createdBy: "Créé par",
+    totalInvoices: "Total factures",
+    searchInvoices: "Rechercher une facture...",
+
+    // Settings / Admin
+    settings: "Paramètres",
+    adminPanel: "Panneau admin",
+    loggedInAs: "Connecté en tant que",
   },
   ar: {
     // Auth
@@ -145,7 +186,48 @@ export const translations = {
     // Tabs
     tabInvoice: "فاتورة",
     tabClients: "الكليان",
+    tabHistory: "التاريخ",
     tabSettings: "إعدادات",
+
+    // User Management
+    manageUsers: "تسيير المستخدمين",
+    usersTitle: "المستخدمين",
+    addUser: "زيد مستخدم",
+    updateUser: "بدل المستخدم",
+    deleteUser: "مسح المستخدم",
+    usernamePlaceholder: "دخل إسم المستخدم",
+    displayNameLabel: "الإسم الكامل",
+    displayNamePlaceholder: "دخل الإسم الكامل",
+    roleLabel: "الدور",
+    roleAdmin: "مدير",
+    roleUser: "مستخدم",
+    noUsersFound: "مكاين حتى مستخدم.",
+    confirmDeleteUser: "واش متأكد بغيتي تمسح هاد المستخدم؟",
+    usernameExists: "هاد إسم المستخدم كاين من قبل.",
+    passwordPlaceholder: "دخل كلمة السر",
+
+    // Password Change
+    changePassword: "بدل كلمة السر",
+    currentPassword: "كلمة السر الحالية",
+    newPassword: "كلمة السر الجديدة",
+    confirmNewPassword: "أكد كلمة السر الجديدة",
+    passwordChanged: "كلمة السر تبدلات بنجاح!",
+    passwordMismatch: "كلمات السر ما متطابقاش.",
+    wrongCurrentPassword: "كلمة السر الحالية غالطة.",
+
+    // Invoice History
+    invoiceHistory: "تاريخ الفواتر",
+    allInvoices: "جميع الفواتر",
+    filterByClient: "فلتر بالكليان",
+    noInvoicesFound: "مكاين حتى فاتورة.",
+    createdBy: "صاوبها",
+    totalInvoices: "مجموع الفواتر",
+    searchInvoices: "قلب على فاتورة...",
+
+    // Settings / Admin
+    settings: "إعدادات",
+    adminPanel: "لوحة المدير",
+    loggedInAs: "داخل ب",
   },
 } as const;
 

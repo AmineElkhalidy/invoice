@@ -2,7 +2,7 @@
 
 import { useLocale } from "@/components/LocaleProvider";
 import { LanguageToggle } from "@/components/LanguageToggle";
-import { logoutClient } from "@/lib/auth";
+import { logoutClient, getSessionClient } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { stationConfig } from "@/config/station";
 import Link from "next/link";
@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 export function Header() {
   const { t } = useLocale();
   const router = useRouter();
+  const session = getSessionClient();
 
   const handleLogout = () => {
     logoutClient();
@@ -55,7 +56,20 @@ export function Header() {
           <Link href="/clients" className="text-xs font-semibold text-slate-300 hover:text-white px-2 py-1 rounded hover:bg-white/10 transition-all">
             {t("clientsTitle")}
           </Link>
+          <Link href="/history" className="text-xs font-semibold text-slate-300 hover:text-white px-2 py-1 rounded hover:bg-white/10 transition-all">
+            {t("invoiceHistory")}
+          </Link>
+          {session?.role === "admin" && (
+            <Link href="/settings" className="text-xs font-semibold text-slate-300 hover:text-white px-2 py-1 rounded hover:bg-white/10 transition-all">
+              {t("settings")}
+            </Link>
+          )}
           <div className="w-px h-4 bg-white/20 mx-1"></div>
+          {session && (
+            <span className="text-[10px] text-emerald-400 font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+              {session.displayName}
+            </span>
+          )}
           <LanguageToggle />
           <Button
             onClick={handleLogout}

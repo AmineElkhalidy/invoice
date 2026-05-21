@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { loginClient } from "@/lib/auth";
+import { useState, useEffect } from "react";
+import { loginClient, seedAdminUser } from "@/lib/auth";
 import { useLocale } from "@/components/LocaleProvider";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,12 @@ export default function LoginPage() {
   const { t } = useLocale();
   const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  // Seed admin user on first run
+  useEffect(() => {
+    seedAdminUser();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsPending(true);
     setError(null);
@@ -25,16 +30,13 @@ export default function LoginPage() {
     const username = formData.get("username") as string;
     const password = formData.get("password") as string;
 
-    // Simulate slight network delay for the animation effect
-    setTimeout(() => {
-      const result = loginClient(username, password);
-      if (result.success) {
-        router.push("/dashboard");
-      } else {
-        setError(result.error || "invalid_credentials");
-        setIsPending(false);
-      }
-    }, 500);
+    const result = await loginClient(username, password);
+    if (result.success) {
+      router.push("/dashboard");
+    } else {
+      setError(result.error || "invalid_credentials");
+      setIsPending(false);
+    }
   };
 
   return (

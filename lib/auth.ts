@@ -1,17 +1,122 @@
 "use client";
 
-const VALID_USERNAME = "admin";
-const VALID_PASSWORD = "password";
+import { db } from "@/lib/firebase";
+import {
+  collection,
+  getDocs,
+  addDoc,
+  query,
+  where,
+  updateDoc,
+  deleteDoc,
+  doc,
+} from "firebase/firestore";
+
+// ─── Types ───────────────────────────────────────────────────
+export interface UserData {
+  id: string;
+  username: string;
+  passwordHash: string;
+  role: "admin" | "user";
+  displayName: string;
+  createdAt: string;
+}
+
+export interface SessionData {
+  username: string;
+  role: "admin" | "user";
+  displayName: string;
+}
+
 const SESSION_KEY = "invoice_session";
 
-export function loginClient(username: string, password: string): { success: boolean; error?: string } {
-  if (username === VALID_USERNAME && password === VALID_PASSWORD) {
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(SESSION_KEY, "authenticated");
+// ─── Password Hashing ───────────────────────────────────────
+async function hashPassword(password: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+// ─── Seed Admin ─────────────────────────────────────────────
+// Call on app startup to ensure the default admin exists on first run
+export async function seedAdminUser(): Promise<void> {
+  if (!db) return;
+  try {
+    const q = query(collection(db, "users"), where("role", "==", "admin"));
+    const snap = await getDocs(q);
+    if (snap.empty) {
+      const hash = await hashPassword("password");
+      await addDoc(collection(db, "users"), {
+        username: "admin",
+        passwordHash: hash,
+        role: "admin",
+        displayName: "Administrateur",
+        createdAt: new Date().toISOString(),
+      });
     }
-    return { success: true };
+  } catch (e) {
+    console.error("Error seeding admin:", e);
   }
-  return { success: false, error: "invalid_credentials" };
+}
+
+// ─── Login ──────────────────────────────────────────────────
+export async function loginClient(
+  username: string,
+  password: string
+): Promise<{ success: boolean; error?: string }> {
+  if (!db) return { success: false, error: "no_db" };
+  try {
+    const q = query(
+      collection(db, "users"),
+      where("username", "==", username.trim().toLowerCase())
+    );
+    const snap = await getDocs(q);
+    if (snap.empty) {
+      return { success: false, error: "invalid_credentials" };
+    }
+
+    const userDoc = snap.docs[0];
+    const userData = userDoc.data();
+    const hash = await hashPassword(password);
+
+    if (userData.passwordHash !== hash) {
+      return { success: false, error: "invalid_credentials" };
+    }
+
+    const session: SessionData = {
+      username: userData.username,
+      role: userData.role,
+      displayName: userData.displayName,
+    };
+
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    }
+
+    return { success: true };
+  } catch (e) {
+    console.error("Login error:", e);
+    return { success: false, error: "server_error" };
+  }
+}
+
+// ─── Session ────────────────────────────────────────────────
+export function getSessionClient(): SessionData | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const stored = window.localStorage.getItem(SESSION_KEY);
+    if (stored) {
+      return JSON.parse(stored) as SessionData;
+    }
+  } catch (e) {}
+  return null;
+}
+
+export function isAdmin(): boolean {
+  const session = getSessionClient();
+  return session?.role === "admin";
 }
 
 export function logoutClient(): void {
@@ -20,9 +125,122 @@ export function logoutClient(): void {
   }
 }
 
-export function getSessionClient(): boolean {
-  if (typeof window !== "undefined") {
-    return window.localStorage.getItem(SESSION_KEY) === "authenticated";
+// ─── Password Change ────────────────────────────────────────
+export async function changePassword(
+  username: string,
+  currentPassword: string,
+  newPassword: string
+): Promise<{ success: boolean; error?: string }> {
+  if (!db) return { success: false, error: "no_db" };
+  try {
+    const q = query(
+      collection(db, "users"),
+      where("username", "==", username)
+    );
+    const snap = await getDocs(q);
+    if (snap.empty) return { success: false, error: "user_not_found" };
+
+    const userDoc = snap.docs[0];
+    const userData = userDoc.data();
+    const currentHash = await hashPassword(currentPassword);
+
+    if (userData.passwordHash !== currentHash) {
+      return { success: false, error: "wrong_current_password" };
+    }
+
+    const newHash = await hashPassword(newPassword);
+    await updateDoc(doc(db, "users", userDoc.id), {
+      passwordHash: newHash,
+    });
+
+    return { success: true };
+  } catch (e) {
+    console.error("Change password error:", e);
+    return { success: false, error: "server_error" };
   }
-  return false;
+}
+
+// ─── User Management (Admin only) ──────────────────────────
+export async function fetchUsers(): Promise<UserData[]> {
+  if (!db) return [];
+  try {
+    const snap = await getDocs(collection(db, "users"));
+    const users: UserData[] = [];
+    snap.forEach((d) => {
+      users.push({ id: d.id, ...d.data() } as UserData);
+    });
+    users.sort((a, b) => a.username.localeCompare(b.username));
+    return users;
+  } catch (e) {
+    console.error("Error fetching users:", e);
+    return [];
+  }
+}
+
+export async function createUser(
+  username: string,
+  password: string,
+  displayName: string,
+  role: "admin" | "user"
+): Promise<{ success: boolean; error?: string }> {
+  if (!db) return { success: false, error: "no_db" };
+  try {
+    // Check if username exists
+    const q = query(
+      collection(db, "users"),
+      where("username", "==", username.trim().toLowerCase())
+    );
+    const existing = await getDocs(q);
+    if (!existing.empty) {
+      return { success: false, error: "username_exists" };
+    }
+
+    const hash = await hashPassword(password);
+    await addDoc(collection(db, "users"), {
+      username: username.trim().toLowerCase(),
+      passwordHash: hash,
+      role,
+      displayName: displayName.trim(),
+      createdAt: new Date().toISOString(),
+    });
+
+    return { success: true };
+  } catch (e) {
+    console.error("Create user error:", e);
+    return { success: false, error: "server_error" };
+  }
+}
+
+export async function updateUser(
+  userId: string,
+  data: { displayName?: string; role?: "admin" | "user"; password?: string }
+): Promise<{ success: boolean; error?: string }> {
+  if (!db) return { success: false, error: "no_db" };
+  try {
+    const updateData: Record<string, string> = {};
+    if (data.displayName) updateData.displayName = data.displayName.trim();
+    if (data.role) updateData.role = data.role;
+    if (data.password) {
+      updateData.passwordHash = await hashPassword(data.password);
+    }
+
+    await updateDoc(doc(db, "users", userId), updateData);
+    return { success: true };
+  } catch (e) {
+    console.error("Update user error:", e);
+    return { success: false, error: "server_error" };
+  }
+}
+
+export async function deleteUser(
+  userId: string
+): Promise<{ success: boolean; error?: string }> {
+  if (!db) return { success: false, error: "no_db" };
+  try {
+    await deleteDoc(doc(db, "users", userId));
+    return { success: true };
+  } catch (e) {
+    console.error("Delete user error:", e);
+    return { success: false, error: "server_error" };
+  }
 }

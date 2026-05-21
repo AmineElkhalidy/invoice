@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useEffect, useRef } from "react";
 import { db } from "@/lib/firebase";
 import { collection, getDocs, addDoc, query, where } from "firebase/firestore";
+import { getSessionClient } from "@/lib/auth";
 
 interface SavedClient {
   name: string;
@@ -122,11 +123,9 @@ export default function DashboardPage() {
         
         const newClientData = { name: newCustomerName, ice: newClientIce };
         if (existingIndex >= 0) {
-          // It exists locally. In a full app, we might update Firebase here if ICE changed.
           existingClients[existingIndex] = newClientData;
           setSavedClients(existingClients);
         } else {
-          // Doesn't exist, save to Firebase
           existingClients.push(newClientData);
           setSavedClients(existingClients);
           
@@ -137,15 +136,40 @@ export default function DashboardPage() {
         }
       }
 
-      setInvoiceData({
-        id: getNextInvoiceIdForClient(newCustomerName),
+      const invoiceId = getNextInvoiceIdForClient(newCustomerName);
+      const totalHT = parsedUnitPrice * parsedQuantity;
+      const totalTTC = totalHT + totalHT * 0.1;
+      const now = new Date();
+
+      const newInvoiceData: InvoiceData = {
+        id: invoiceId,
         customerName: newCustomerName,
         clientIce: newClientIce,
         unitPrice: parsedUnitPrice,
         quantity: parsedQuantity,
         fuelType,
-        date: new Date(),
-      });
+        date: now,
+      };
+
+      // Save invoice to Firestore for history
+      if (db) {
+        const session = getSessionClient();
+        addDoc(collection(db, "invoices"), {
+          invoiceId,
+          customerName: newCustomerName,
+          clientIce: newClientIce,
+          unitPrice: parsedUnitPrice,
+          quantity: parsedQuantity,
+          fuelType,
+          totalHT,
+          totalTTC,
+          date: now.toISOString(),
+          createdBy: session?.username || "unknown",
+          createdAt: now.toISOString(),
+        }).catch((err) => console.error("Failed to save invoice:", err));
+      }
+
+      setInvoiceData(newInvoiceData);
     },
     [customerName, clientIce, unitPrice, quantity, fuelType, savedClients]
   );

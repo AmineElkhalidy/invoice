@@ -13,7 +13,7 @@ import { useRouter, useFocusEffect } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocale } from "../../context/LocaleProvider";
-import { logoutClient } from "../../lib/auth";
+import { logoutClient, getSessionClient } from "../../lib/auth";
 import { stationConfig } from "../../config/station";
 import { db } from "../../lib/firebase";
 import { collection, getDocs, addDoc } from "firebase/firestore";
@@ -101,6 +101,24 @@ export default function DashboardScreen() {
     } catch (e) {}
 
     const invoiceId = `FAC-${datePart}-${String(nextCount).padStart(4, "0")}`;
+
+    // Save invoice to Firestore for history
+    const totalHT = price * qty;
+    const totalTTC = totalHT + totalHT * 0.1;
+    const session = await getSessionClient();
+    addDoc(collection(db, "invoices"), {
+      invoiceId,
+      customerName: trimmedName,
+      clientIce: trimmedIce,
+      unitPrice: price,
+      quantity: qty,
+      fuelType,
+      totalHT,
+      totalTTC,
+      date: now.toISOString(),
+      createdBy: session?.username || "unknown",
+      createdAt: now.toISOString(),
+    }).catch((err) => console.error("Failed to save invoice:", err));
 
     router.push({
       pathname: "/(app)/invoice",

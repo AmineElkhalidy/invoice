@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
-import { loginClient } from "../lib/auth";
+import { loginClient, seedAdminUser } from "../lib/auth";
 import { useLocale } from "../context/LocaleProvider";
 import { s, vs, ms } from "../lib/responsive";
 
@@ -22,6 +22,11 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const { t, locale, toggleLocale } = useLocale();
   const router = useRouter();
+
+  // Seed admin user on first run
+  useEffect(() => {
+    seedAdminUser();
+  }, []);
 
   const handleLogin = async () => {
     setLoading(true);

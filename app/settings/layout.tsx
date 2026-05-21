@@ -2,27 +2,29 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getSessionClient, type SessionData } from "@/lib/auth";
+import { getSessionClient, isAdmin } from "@/lib/auth";
 import { Header } from "@/components/Header";
 
-export default function DashboardLayout({
+export default function SettingsLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const [session, setSession] = useState<SessionData | null | undefined>(undefined);
+  const [authorized, setAuthorized] = useState<boolean | null>(null);
 
   useEffect(() => {
     const s = getSessionClient();
     if (!s) {
       router.push("/login");
+    } else if (s.role !== "admin") {
+      router.push("/dashboard");
     } else {
-      setSession(s);
+      setAuthorized(true);
     }
   }, [router]);
 
-  if (session === undefined) {
+  if (authorized === null) {
     return <div className="min-h-dvh bg-slate-950 flex items-center justify-center"></div>;
   }
 

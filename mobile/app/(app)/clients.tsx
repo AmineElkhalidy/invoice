@@ -21,6 +21,7 @@ import {
   deleteDoc,
   doc,
 } from "firebase/firestore";
+import { getSessionClient, type SessionData } from "../../lib/auth";
 import { s, vs, ms } from "../../lib/responsive";
 
 interface ClientData {
@@ -36,6 +37,14 @@ export default function ClientsScreen() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [ice, setIce] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const session = await getSessionClient();
+      setIsAdmin(session?.role === "admin");
+    })();
+  }, []);
 
   const fetchClients = useCallback(async () => {
     try {
@@ -200,12 +209,14 @@ export default function ClientsScreen() {
                   >
                     <Text style={styles.editIcon}>✏️</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => handleDelete(client.id)}
-                    style={styles.actionBtn}
-                  >
-                    <Text style={styles.deleteIcon}>🗑️</Text>
-                  </TouchableOpacity>
+                  {isAdmin && (
+                    <TouchableOpacity
+                      onPress={() => handleDelete(client.id)}
+                      style={styles.actionBtn}
+                    >
+                      <Text style={styles.deleteIcon}>🗑️</Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
               </View>
             ))
