@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocale } from "../../context/LocaleProvider";
@@ -36,18 +36,22 @@ export default function DashboardScreen() {
   const [savedClients, setSavedClients] = useState<SavedClient[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const snap = await getDocs(collection(db, "clients"));
-        const list: SavedClient[] = [];
-        snap.forEach((d) => list.push(d.data() as SavedClient));
-        setSavedClients(list);
-      } catch (e) {
-        console.error("Error fetching clients:", e);
-      }
-    })();
-  }, []);
+  // Re-fetch clients every time the dashboard tab gains focus
+  // This ensures clients added in the Clients tab appear as suggestions immediately
+  useFocusEffect(
+    useCallback(() => {
+      (async () => {
+        try {
+          const snap = await getDocs(collection(db, "clients"));
+          const list: SavedClient[] = [];
+          snap.forEach((d) => list.push(d.data() as SavedClient));
+          setSavedClients(list);
+        } catch (e) {
+          console.error("Error fetching clients:", e);
+        }
+      })();
+    }, [])
+  );
 
   const filteredClients = savedClients.filter((c) =>
     c.name.toLowerCase().includes(customerName.toLowerCase())
