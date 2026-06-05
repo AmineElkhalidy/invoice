@@ -6,7 +6,8 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "gen:signature": "node -e \"const fs=require('fs');const b64=fs.readFileSync('assets/signature.png').toString('base64');fs.writeFileSync('lib/signatureBase64.ts','// Auto-generated from assets/signature.png\\nexport const SIGNATURE_BASE64 = `data:image/png;base64,'+b64+'`;\\n');console.log('signatureBase64.ts updated');\""
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",

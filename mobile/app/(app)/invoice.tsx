@@ -5,35 +5,12 @@ import { LinearGradient } from "expo-linear-gradient";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import { File, Paths } from "expo-file-system";
-import * as FileSystem from "expo-file-system";
-import { Asset } from "expo-asset";
 import { useLocale } from "../../context/LocaleProvider";
 import { stationConfig } from "../../config/station";
 import { s, vs, ms } from "../../lib/responsive";
+import { SIGNATURE_BASE64 } from "../../lib/signatureBase64";
 
 const signatureAsset = require("../../assets/signature.png");
-
-async function getSignatureBase64(): Promise<string | null> {
-  try {
-    // In production EAS builds, Asset.loadAsync may leave localUri null
-    // because assets remain inside the bundle. We must call downloadAsync()
-    // to force extraction to a writable local file:// path first.
-    const asset = Asset.fromModule(signatureAsset);
-    await asset.downloadAsync();
-    const localUri = asset.localUri;
-    if (!localUri) {
-      console.warn("Signature asset localUri is null after downloadAsync");
-      return null;
-    }
-    const base64 = await FileSystem.readAsStringAsync(localUri, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
-    return `data:image/png;base64,${base64}`;
-  } catch (e) {
-    console.error("Failed to load signature for PDF:", e);
-    return null;
-  }
-}
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("fr-FR", {
@@ -203,8 +180,8 @@ export default function InvoiceScreen() {
 
   const handleSavePDF = async () => {
     try {
-      const signatureBase64 = await getSignatureBase64();
-      const html = generateInvoiceHTML(data, t, locale, signatureBase64);
+      // SIGNATURE_BASE64 is baked into the JS bundle at build time — always available
+      const html = generateInvoiceHTML(data, t, locale, SIGNATURE_BASE64);
       const { uri } = await Print.printToFileAsync({ html });
 
       // Rename to: Station BENKHALED - Client Name - Facture N°X.pdf
