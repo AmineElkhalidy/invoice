@@ -1,13 +1,30 @@
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert, Platform } from "react-native";
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert, Platform, Image } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import { File, Paths } from "expo-file-system";
+import * as FileSystem from "expo-file-system";
+import { Asset } from "expo-asset";
 import { useLocale } from "../../context/LocaleProvider";
 import { stationConfig } from "../../config/station";
 import { s, vs, ms } from "../../lib/responsive";
+
+const signatureAsset = require("../../assets/signature.png");
+
+async function getSignatureBase64(): Promise<string | null> {
+  try {
+    const [asset] = await Asset.loadAsync(signatureAsset);
+    if (!asset.localUri) return null;
+    const base64 = await FileSystem.readAsStringAsync(asset.localUri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+    return `data:image/png;base64,${base64}`;
+  } catch {
+    return null;
+  }
+}
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("fr-FR", {
@@ -27,7 +44,7 @@ function formatDate(dateStr: string, locale: string): string {
   }).format(d);
 }
 
-function generateInvoiceHTML(data: any, t: any, locale: string) {
+function generateInvoiceHTML(data: any, t: any, locale: string, signatureBase64?: string | null) {
   const totalHT = data.unitPrice * data.quantity;
   const tvaAmount = totalHT * 0.1;
   const totalTTC = totalHT + tvaAmount;
@@ -70,6 +87,10 @@ function generateInvoiceHTML(data: any, t: any, locale: string) {
     .totals .total-row { border-top: 2px solid #1e293b; padding-top: 8px; margin-top: 4px; font-size: 15px; font-weight: 700; color: #0f172a; }
     .words { padding: 12px 24px; border-top: 1px solid #e2e8f0; font-size: 11px; color: #94a3b8; font-style: italic; }
     .words span { font-weight: 600; color: #475569; }
+    .signature-section { padding: 24px 24px 8px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; }
+    .signature-box { text-align: center; }
+    .signature-box .sig-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; font-weight: 600; margin-bottom: 8px; }
+    .signature-box img { max-height: 100px; max-width: 220px; object-fit: contain; mix-blend-mode: multiply; }
     .footer { background: #f8fafc; padding: 12px 24px; text-align: center; font-size: 10px; color: #94a3b8; margin-top: 20px; }
   </style>
 </head>
@@ -125,6 +146,13 @@ function generateInvoiceHTML(data: any, t: any, locale: string) {
     <div class="row total-row"><span>${t("totalTTC")}</span><span>${formatCurrency(totalTTC)} ${t("mad")}</span></div>
   </div>
   <div class="words">${t("amountInWords")} <span>${formatCurrency(totalTTC)} ${t("mad")}</span></div>
+  ${signatureBase64 ? `
+  <div class="signature-section">
+    <div class="signature-box">
+      <p class="sig-label">${t("signature")}</p>
+      <img src="${signatureBase64}" alt="Signature & Cachet" />
+    </div>
+  </div>` : ""}
   <div class="footer">
     <p>${t("thankYou")}</p>
     <p style="margin-top:4px">${stationConfig.address} • ${t("phone")}: ${stationConfig.phone}</p>
@@ -166,7 +194,8 @@ export default function InvoiceScreen() {
 
   const handleSavePDF = async () => {
     try {
-      const html = generateInvoiceHTML(data, t, locale);
+      const signatureBase64 = await getSignatureBase64();
+      const html = generateInvoiceHTML(data, t, locale, signatureBase64);
       const { uri } = await Print.printToFileAsync({ html });
 
       // Rename to: Station BENKHALED - Client Name - Facture N°X.pdf
@@ -300,6 +329,18 @@ export default function InvoiceScreen() {
             </View>
           </View>
 
+          {/* Signature & Cachet */}
+          <View style={styles.signatureSection}>
+            <View style={styles.signatureBox}>
+              <Text style={styles.signatureLabel}>{t("signature")}</Text>
+              <Image
+                source={signatureAsset}
+                style={styles.signatureImage}
+                resizeMode="contain"
+              />
+            </View>
+          </View>
+
           {/* Footer */}
           <View style={styles.invoiceFooter}>
             <Text style={styles.footerText}>{t("thankYou")}</Text>
@@ -399,6 +440,27 @@ const styles = StyleSheet.create({
   grandTotal: { borderTopWidth: 2, borderTopColor: "#1e293b", paddingTop: vs(8), marginTop: vs(4) },
   grandTotalLabel: { fontSize: ms(14), fontWeight: "800", color: "#0f172a" },
   grandTotalValue: { fontSize: ms(14), fontWeight: "800", color: "#0f172a" },
+  signatureSection: {
+    borderTopWidth: 1,
+    borderTopColor: "#e2e8f0",
+    paddingHorizontal: s(14),
+    paddingTop: vs(16),
+    paddingBottom: vs(8),
+    alignItems: "flex-end",
+  },
+  signatureBox: { alignItems: "center" },
+  signatureLabel: {
+    fontSize: ms(9),
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+    color: "#94a3b8",
+    marginBottom: vs(6),
+  },
+  signatureImage: {
+    width: s(160),
+    height: vs(72),
+  },
   invoiceFooter: {
     backgroundColor: "#f8fafc",
     padding: s(12),
