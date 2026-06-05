@@ -20,6 +20,8 @@ import {
   updateDoc,
   deleteDoc,
   doc,
+  query,
+  where,
 } from "firebase/firestore";
 import { getSessionClient, type SessionData } from "../../lib/auth";
 import { s, vs, ms } from "../../lib/responsive";
@@ -38,6 +40,7 @@ export default function ClientsScreen() {
   const [name, setName] = useState("");
   const [ice, setIce] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [invoiceCountsThisYear, setInvoiceCountsThisYear] = useState<Record<string, number>>({});
 
   useEffect(() => {
     (async () => {
@@ -55,6 +58,22 @@ export default function ClientsScreen() {
       );
       list.sort((a, b) => a.name.localeCompare(b.name));
       setClients(list);
+
+      // Fetch invoices for current year and compute per-client count
+      const year = new Date().getFullYear();
+      const startOfYear = new Date(`${year}-01-01T00:00:00.000Z`).toISOString();
+      const invoicesSnap = await getDocs(
+        query(collection(db, "invoices"), where("createdAt", ">=", startOfYear))
+      );
+      const counts: Record<string, number> = {};
+      invoicesSnap.forEach((d) => {
+        const data = d.data();
+        if (data.customerName) {
+          const key = (data.customerName as string).toLowerCase().trim();
+          counts[key] = (counts[key] || 0) + 1;
+        }
+      });
+      setInvoiceCountsThisYear(counts);
     } catch (e) {
       console.error("Error fetching clients:", e);
     } finally {
@@ -192,34 +211,42 @@ export default function ClientsScreen() {
               <Text style={styles.emptyText}>{t("noClientsFound")}</Text>
             </View>
           ) : (
-            clients.map((client) => (
-              <View key={client.id} style={styles.clientRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.clientName}>{client.name}</Text>
-                  {client.ice ? (
-                    <Text style={styles.clientIce}>
-                      {t("ice")}: {client.ice}
-                    </Text>
-                  ) : null}
-                </View>
-                <View style={styles.clientActions}>
-                  <TouchableOpacity
-                    onPress={() => handleEdit(client)}
-                    style={styles.actionBtn}
-                  >
-                    <Text style={styles.editIcon}>✏️</Text>
-                  </TouchableOpacity>
-                  {isAdmin && (
+            clients.map((client) => {
+              const count = invoiceCountsThisYear[client.name.toLowerCase().trim()] || 0;
+              return (
+                <View key={client.id} style={styles.clientRow}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.clientName}>{client.name}</Text>
+                    {client.ice ? (
+                      <Text style={styles.clientIce}>
+                        {t("ice")}: {client.ice}
+                      </Text>
+                    ) : null}
+                  </View>
+                  {/* Yearly invoice count badge */}
+                  <View style={styles.countBadge}>
+                    <Text style={styles.countBadgeText}>{count}</Text>
+                    <Text style={styles.countBadgeLabel}> {t("invoiceCount")}</Text>
+                  </View>
+                  <View style={styles.clientActions}>
                     <TouchableOpacity
-                      onPress={() => handleDelete(client.id)}
+                      onPress={() => handleEdit(client)}
                       style={styles.actionBtn}
                     >
-                      <Text style={styles.deleteIcon}>🗑️</Text>
+                      <Text style={styles.editIcon}>✏️</Text>
                     </TouchableOpacity>
-                  )}
+                    {isAdmin && (
+                      <TouchableOpacity
+                        onPress={() => handleDelete(client.id)}
+                        style={styles.actionBtn}
+                      >
+                        <Text style={styles.deleteIcon}>🗑️</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
                 </View>
-              </View>
-            ))
+              );
+            })
           )}
         </View>
       </ScrollView>
@@ -313,4 +340,17 @@ const styles = StyleSheet.create({
   },
   editIcon: { fontSize: ms(16) },
   deleteIcon: { fontSize: ms(16) },
+  countBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(16,185,129,0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(16,185,129,0.25)",
+    borderRadius: s(20),
+    paddingHorizontal: s(8),
+    paddingVertical: vs(3),
+    marginRight: s(6),
+  },
+  countBadgeText: { color: "#34d399", fontSize: ms(12), fontWeight: "700" },
+  countBadgeLabel: { color: "rgba(52,211,153,0.7)", fontSize: ms(10) },
 });

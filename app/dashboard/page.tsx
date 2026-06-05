@@ -24,33 +24,30 @@ interface SavedClient {
   ice: string;
 }
 
-function getNextInvoiceIdForClient(clientName: string): string {
+function getNextYearlyInvoiceId(): string {
   const now = new Date();
   const year = now.getFullYear();
   const datePart = `${year}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
-  
+
   if (typeof window === "undefined") {
     const randomPart = String(Math.floor(1000 + Math.random() * 9000));
     return `FAC-${datePart}-${randomPart}`;
   }
 
-  const normalizedName = clientName.trim().toLowerCase();
-  const storageKey = `invoice_counts_${year}`;
-  let counts: Record<string, number> = {};
-  
+  const storageKey = `invoice_yearly_count_${year}`;
+  let count = 0;
+
   try {
     const stored = window.localStorage.getItem(storageKey);
-    if (stored) {
-      counts = JSON.parse(stored);
-    }
+    if (stored) count = parseInt(stored, 10) || 0;
   } catch (e) {}
 
-  const currentCount = counts[normalizedName] || 0;
-  const nextCount = currentCount + 1;
-  
-  counts[normalizedName] = nextCount;
-  window.localStorage.setItem(storageKey, JSON.stringify(counts));
-  
+  const nextCount = count + 1;
+
+  try {
+    window.localStorage.setItem(storageKey, String(nextCount));
+  } catch (e) {}
+
   return `FAC-${datePart}-${String(nextCount).padStart(4, "0")}`;
 }
 
@@ -136,7 +133,7 @@ export default function DashboardPage() {
         }
       }
 
-      const invoiceId = getNextInvoiceIdForClient(newCustomerName);
+      const invoiceId = getNextYearlyInvoiceId();
       const totalHT = parsedUnitPrice * parsedQuantity;
       const totalTTC = totalHT + totalHT * 0.1;
       const now = new Date();

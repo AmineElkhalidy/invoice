@@ -67,6 +67,8 @@ export const translations = {
     delete: "Supprimer",
     confirmDelete: "Êtes-vous sûr de vouloir supprimer ce client ?",
     loadingClients: "Chargement des clients...",
+    invoicesThisYear: "Factures cette année",
+    invoiceCount: "facture(s)",
 
     // User Management
     manageUsers: "Gérer les utilisateurs",
@@ -174,6 +176,8 @@ export const translations = {
     delete: "مسح",
     confirmDelete: "واش متأكد بغيتي تمسح هاد الكليان؟",
     loadingClients: "كنجيبو الكليان...",
+    invoicesThisYear: "فواتر هاد العام",
+    invoiceCount: "فاتورة",
 
     // User Management
     manageUsers: "تسيير المستخدمين",

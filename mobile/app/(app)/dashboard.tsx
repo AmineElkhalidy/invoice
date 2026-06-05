@@ -77,27 +77,22 @@ export default function DashboardScreen() {
       }).catch(console.error);
     }
 
-    // Generate sequential invoice ID per client (matching web version)
+    // Generate sequential invoice ID — global counter for the year
     const now = new Date();
     const year = now.getFullYear();
     const datePart = `${year}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
-    const normalizedName = trimmedName.toLowerCase();
-    const storageKey = `invoice_counts_${year}`;
-    let counts: Record<string, number> = {};
+    const storageKey = `invoice_yearly_count_${year}`;
+    let count = 0;
 
     try {
       const stored = await AsyncStorage.getItem(storageKey);
-      if (stored) {
-        counts = JSON.parse(stored);
-      }
+      if (stored) count = parseInt(stored, 10) || 0;
     } catch (e) {}
 
-    const currentCount = counts[normalizedName] || 0;
-    const nextCount = currentCount + 1;
-    counts[normalizedName] = nextCount;
+    const nextCount = count + 1;
 
     try {
-      await AsyncStorage.setItem(storageKey, JSON.stringify(counts));
+      await AsyncStorage.setItem(storageKey, String(nextCount));
     } catch (e) {}
 
     const invoiceId = `FAC-${datePart}-${String(nextCount).padStart(4, "0")}`;

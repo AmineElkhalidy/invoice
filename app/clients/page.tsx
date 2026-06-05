@@ -14,6 +14,8 @@ import {
   updateDoc,
   deleteDoc,
   doc,
+  query,
+  where,
 } from "firebase/firestore";
 import { getSessionClient } from "@/lib/auth";
 
@@ -29,6 +31,7 @@ export default function ClientsPage() {
   const admin = session?.role === "admin";
   const [clients, setClients] = useState<ClientData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [invoiceCountsThisYear, setInvoiceCountsThisYear] = useState<Record<string, number>>({});
 
   // Form State
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -41,6 +44,8 @@ export default function ClientsPage() {
         setLoading(false);
         return;
       }
+
+      // Fetch clients
       const querySnapshot = await getDocs(collection(db, "clients"));
       const clientsList: ClientData[] = [];
       querySnapshot.forEach((docSnap) => {
@@ -51,6 +56,22 @@ export default function ClientsPage() {
       });
       clientsList.sort((a, b) => a.name.localeCompare(b.name));
       setClients(clientsList);
+
+      // Fetch invoices for current year and count per client
+      const year = new Date().getFullYear();
+      const startOfYear = new Date(`${year}-01-01T00:00:00.000Z`).toISOString();
+      const invoicesSnap = await getDocs(
+        query(collection(db, "invoices"), where("createdAt", ">=", startOfYear))
+      );
+      const counts: Record<string, number> = {};
+      invoicesSnap.forEach((docSnap) => {
+        const data = docSnap.data();
+        if (data.customerName) {
+          const key = (data.customerName as string).toLowerCase().trim();
+          counts[key] = (counts[key] || 0) + 1;
+        }
+      });
+      setInvoiceCountsThisYear(counts);
     } catch (error) {
       console.error("Error fetching clients:", error);
     } finally {
@@ -252,52 +273,39 @@ export default function ClientsPage() {
             </div>
           ) : (
             <div className="space-y-2">
-              {clients.map((client) => (
-                <div
-                  key={client.id}
-                  className="group flex items-center justify-between rounded-lg border border-white/5 bg-white/[0.02] px-4 py-3 transition-all hover:bg-white/5 hover:border-white/10"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-slate-200 truncate">
-                      {client.name}
-                    </p>
-                    {client.ice && (
-                      <p className="text-xs text-slate-500 font-mono mt-0.5">
-                        {t("ice")}: {client.ice}
+              {clients.map((client) => {
+                const count = invoiceCountsThisYear[client.name.toLowerCase().trim()] || 0;
+                return (
+                  <div
+                    key={client.id}
+                    className="group flex items-center justify-between rounded-lg border border-white/5 bg-white/[0.02] px-4 py-3 transition-all hover:bg-white/5 hover:border-white/10"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-slate-200 truncate">
+                        {client.name}
                       </p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1 ms-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleEdit(client)}
-                      className="h-8 w-8 p-0 text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10"
-                      id={`edit-client-${client.id}`}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="h-3.5 w-3.5"
-                        aria-hidden="true"
-                      >
-                        <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                        <path d="m15 5 4 4" />
+                      {client.ice && (
+                        <p className="text-xs text-slate-500 font-mono mt-0.5">
+                          {t("ice")}: {client.ice}
+                        </p>
+                      )}
+                    </div>
+                    {/* Yearly invoice count badge */}
+                    <div className="mx-3 flex-shrink-0 flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3 text-emerald-400" aria-hidden="true">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
                       </svg>
-                      <span className="sr-only">{t("edit")}</span>
-                    </Button>
-                    {admin && (
+                      <span className="text-xs font-semibold text-emerald-400 tabular-nums">{count}</span>
+                      <span className="text-xs text-emerald-500/70">{t("invoiceCount")}</span>
+                    </div>
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => handleDelete(client.id)}
-                        className="h-8 w-8 p-0 text-slate-400 hover:text-red-400 hover:bg-red-500/10"
-                        id={`delete-client-${client.id}`}
+                        onClick={() => handleEdit(client)}
+                        className="h-8 w-8 p-0 text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10"
+                        id={`edit-client-${client.id}`}
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -310,16 +318,41 @@ export default function ClientsPage() {
                           className="h-3.5 w-3.5"
                           aria-hidden="true"
                         >
-                          <path d="M3 6h18" />
-                          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                          <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                          <path d="m15 5 4 4" />
                         </svg>
-                        <span className="sr-only">{t("delete")}</span>
+                        <span className="sr-only">{t("edit")}</span>
                       </Button>
-                    )}
+                      {admin && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleDelete(client.id)}
+                          className="h-8 w-8 p-0 text-slate-400 hover:text-red-400 hover:bg-red-500/10"
+                          id={`delete-client-${client.id}`}
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="h-3.5 w-3.5"
+                            aria-hidden="true"
+                          >
+                            <path d="M3 6h18" />
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                          </svg>
+                          <span className="sr-only">{t("delete")}</span>
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>
