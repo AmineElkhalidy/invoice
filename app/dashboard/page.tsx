@@ -27,11 +27,10 @@ interface SavedClient {
 function getNextYearlyInvoiceId(): string {
   const now = new Date();
   const year = now.getFullYear();
-  const datePart = `${year}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
 
   if (typeof window === "undefined") {
     const randomPart = String(Math.floor(1000 + Math.random() * 9000));
-    return `FAC-${datePart}-${randomPart}`;
+    return `${randomPart}/${year}`;
   }
 
   const storageKey = `invoice_yearly_count_${year}`;
@@ -48,7 +47,7 @@ function getNextYearlyInvoiceId(): string {
     window.localStorage.setItem(storageKey, String(nextCount));
   } catch (e) {}
 
-  return `FAC-${datePart}-${String(nextCount).padStart(4, "0")}`;
+  return `${String(nextCount).padStart(4, "0")}/${year}`;
 }
 
 export default function DashboardPage() {

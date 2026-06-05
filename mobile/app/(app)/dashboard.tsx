@@ -80,7 +80,6 @@ export default function DashboardScreen() {
     // Generate sequential invoice ID — global counter for the year
     const now = new Date();
     const year = now.getFullYear();
-    const datePart = `${year}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
     const storageKey = `invoice_yearly_count_${year}`;
     let count = 0;
 
@@ -95,7 +94,7 @@ export default function DashboardScreen() {
       await AsyncStorage.setItem(storageKey, String(nextCount));
     } catch (e) {}
 
-    const invoiceId = `FAC-${datePart}-${String(nextCount).padStart(4, "0")}`;
+    const invoiceId = `${String(nextCount).padStart(4, "0")}/${year}`;
 
     // Save invoice to Firestore for history
     const totalHT = price * qty;

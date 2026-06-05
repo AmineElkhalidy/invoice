@@ -15,13 +15,22 @@ const signatureAsset = require("../../assets/signature.png");
 
 async function getSignatureBase64(): Promise<string | null> {
   try {
-    const [asset] = await Asset.loadAsync(signatureAsset);
-    if (!asset.localUri) return null;
-    const base64 = await FileSystem.readAsStringAsync(asset.localUri, {
+    // In production EAS builds, Asset.loadAsync may leave localUri null
+    // because assets remain inside the bundle. We must call downloadAsync()
+    // to force extraction to a writable local file:// path first.
+    const asset = Asset.fromModule(signatureAsset);
+    await asset.downloadAsync();
+    const localUri = asset.localUri;
+    if (!localUri) {
+      console.warn("Signature asset localUri is null after downloadAsync");
+      return null;
+    }
+    const base64 = await FileSystem.readAsStringAsync(localUri, {
       encoding: FileSystem.EncodingType.Base64,
     });
     return `data:image/png;base64,${base64}`;
-  } catch {
+  } catch (e) {
+    console.error("Failed to load signature for PDF:", e);
     return null;
   }
 }
